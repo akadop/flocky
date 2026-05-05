@@ -19,10 +19,9 @@ export async function promiseTimeout<T>(promise: Promise<T>, timeoutMs: number):
     timeoutId = setTimeout(() => reject(new PromiseTimeoutError()), timeoutMs)
   })
 
-  return Promise.race([promise, timeoutPromise]).then((result) => {
+  return Promise.race([promise, timeoutPromise]).finally(() => {
     clearTimeout(timeoutId)
-    return result as T
-  })
+  }) as Promise<T>
 }
 
 export class PromiseTimeoutError extends Error {

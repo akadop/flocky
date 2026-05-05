@@ -8,9 +8,9 @@ async function promiseWithDuration<T>(value: T, duration: number): Promise<T> {
 }
 
 describe('promiseTimeout', () => {
-  test('runs the promise without hitting the timeout', async () => {
+  test('runs the promise without hitting the timeout (resolve)', async () => {
     const start = new Date()
-    const result = await promiseTimeout(promiseWithDuration({ foo: 'bar' }, 100), 200)
+    const result = await promiseTimeout(promiseWithDuration({ foo: 'bar' }, 100), 30_000)
     const end = new Date()
 
     expect(result).toEqual({ foo: 'bar' })
@@ -21,6 +21,27 @@ describe('promiseTimeout', () => {
 
     // @ts-expect-error The return type does not have this property
     expect(result.bar).toBeUndefined()
+  })
+
+  test('runs the promise without hitting the timeout (reject)', async () => {
+    let error: unknown
+
+    const start = new Date()
+    try {
+      await promiseTimeout(
+        new Promise<void>(async (_, reject) => {
+          await sleep(100)
+          reject('Oh no')
+        }),
+        30_000
+      )
+    } catch (err) {
+      error = err
+    }
+    const end = new Date()
+
+    expect(error).toEqual('Oh no')
+    expectApproximateDuration(start, end, 100)
   })
 
   test('rejects the promise when hitting the timeout', async () => {
